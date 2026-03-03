@@ -51,7 +51,7 @@ def can_move_down(gamespace, anchorpos, current_block):
         for i in reversed(range(width)):
             if current_block[height-1][i] == 1:
                 print("its at bottom, current spot:", i)
-                if gamespace[anchorpos[0] + height, anchorpos[1] + i - 1] == 1:
+                if gamespace[anchorpos[0] + height, anchorpos[1] + i] == 1:
                     print(i, "fart", current_block[height-1][i], "something is below", anchorpos[0], anchorpos[1])
                     cantmove = True
                     break
@@ -148,11 +148,56 @@ def hard_drop(gamespace, anchorpos, current_block):
     
     return anchorpos
 
+def place_block(gamespace, anchorpos, current_block):
+    height, width = current_block.shape
 
-def move_block_down(gamespace, anchorpos, current_block):
+    start_row = anchorpos[0]
+    start_col = anchorpos[1]
+
+    region = gamespace[
+        start_row:start_row + height,
+        start_col:start_col + width
+    ]
+
+    mask = current_block != 0
+    region[mask] = current_block[mask]
+
+    print(gamespace)
+
+    anchorpos = spawn_block(5, anchorpos)
+
+    gamespace = row_check(gamespace)
+
+    return gamespace, anchorpos
+
+#ONLY WORKS ON BOTTOM ROW ATM 
+def row_check(gamespace):
+    clearrow = 0
+    for row in gamespace[19]:
+        if row == 0:
+            clearrow = 1
+            break
+
+    if clearrow == 0:
+        gamespace[19, :] = 0
+        r = 19 #row 19
+        gamespace[1:r+1] = gamespace[0:r]
+        gamespace[0] = 0 
+      
+    return gamespace
+
+def move_block_down(gamespace, anchorpos, current_block, block_hover):
     if can_move_down(gamespace, anchorpos, current_block) == False:
         anchorpos[0] = anchorpos[0] + 1
-    return anchorpos
+        print("test1")
+    else:
+        if block_hover == True:
+            print("test2")
+            block_hover = False
+        else:
+            print("moving down")
+            gamespace, anchorpos = place_block(gamespace, anchorpos, current_block)
+    return anchorpos, gamespace, block_hover
 
 def player_move_block(gamespace, anchorpos, currentinput, last_time, current_block):
     if currentinput == 'a':
@@ -211,7 +256,7 @@ def print_temp_screen(gamespace, anchorpos, current_block):
 
 
 def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    #os.system('cls' if os.name == 'nt' else 'clear')
     return
 
 ########## Teris Blocks #############
@@ -238,12 +283,13 @@ anchorpos = spawn_block(centre, anchorpos)
 
 interval = 0.5
 last_time = time.time()
+block_hover = True
 while True:
     now = time.time()
     check_time = now - last_time
 
     if check_time >= interval:
-        anchorpos = move_block_down(gamespace, anchorpos, current_block)
+        anchorpos, gamespace, block_hover = move_block_down(gamespace, anchorpos, current_block, block_hover)
         last_time = time.time()
         clear()
         print_temp_screen(gamespace, anchorpos, current_block)
