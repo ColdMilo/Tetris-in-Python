@@ -37,14 +37,7 @@ def spawn_block(centre: int, anchorpos):
     anchorpos[1] = centre 
     return anchorpos
 
-def can_move_down(gamespace, anchorpos):
-    #will be parsed in later
-    L_tetro = np.array([
-    [1, 1, 1], 
-    [1, 1, 1],
-    [0, 1, 0]])
-
-    current_block = L_tetro.copy()
+def can_move_down(gamespace, anchorpos, current_block):
 
     height, width = current_block.shape
 
@@ -78,131 +71,139 @@ def can_move_down(gamespace, anchorpos):
     return cantmove
 
 #anchorpos 0 = height, anchorpos 1 = width
-def can_move_left(gamespace, anchorpos):
-    L_tetro = np.array([
-    [1, 1, 1], 
-    [1, 1, 1],
-    [0, 1, 0]])
-
-    current_block = L_tetro.copy()
+def can_move_left(gamespace, anchorpos, current_block):
 
     height, width = current_block.shape
 
     print("height:", height, "  width:", width)
 
-    left_block_padding = math.floor((width - 1)/2)
+    left_block_padding = 0
 
     cantmove = False
 
-    print(L_tetro)
-    for i in range(height):
-        if current_block[i][0] == 1:
-            print("its edge , current spot:", i)
-            if gamespace[anchorpos[0] + i, anchorpos[1] - left_block_padding - 1] == 1:
-                    print(i, "fart", current_block[height-1][i], "something is below", anchorpos[0], anchorpos[1])
-                    cantmove = True
-                    break
+    if anchorpos[1] > 0 + left_block_padding:
+        for i in range(height):
+            if current_block[i][0] == 1:
+                print("its edge , current spot:", i)
+                if gamespace[anchorpos[0] + i, anchorpos[1] - left_block_padding - 1] == 1:
+                        print(i, "fart", current_block[height-1][i], "something is below", anchorpos[0], anchorpos[1])
+                        cantmove = True
+                        break
 
-        else:
-            for o in range(width):
-                if current_block[i][o] == 1:
-                    print("not at bottom, looking at spot:", i, "   its deep in at:", o)
-                    if gamespace[anchorpos[0] + i, anchorpos[1] - left_block_padding + o - 1] == 1:
-                            cantmove = True
-                            break
+            else:
+                for o in range(width):
+                    if current_block[i][o] == 1:
+                        print("not at bottom, looking at spot:", i, "   its deep in at:", o)
+                        if gamespace[anchorpos[0] + i, anchorpos[1] - left_block_padding + o - 1] == 1:
+                                cantmove = True
+                                break
+                        
+    else:
+        cantmove = True
     
     return cantmove
 
 
 #anchorpos 0 = height, anchorpos 1 = width
-def can_move_right(gamespace, anchorpos):
-    L_tetro = np.array([
-    [1, 1, 1], 
-    [1, 1, 1],
-    [0, 1, 0]])
-
-    current_block = L_tetro.copy()
+def can_move_right(gamespace, anchorpos, current_block):
 
     height, width = current_block.shape
 
     print("height:", height, "  width:", width)
 
-    right_block_padding = math.floor((width - 1)/2)
+    right_block_padding = width - 1
 
     cantmove = False
 
     print(L_tetro)
-    for i in reversed(range(height)):
-        if current_block[i][width - 1] == 1:
-            print("its edge , current spot:", i)
-            if gamespace[anchorpos[0] + i, anchorpos[1] + right_block_padding + 1] == 1:
-                    print(i, "fart", current_block[height-1][i], "something is below", anchorpos[0], anchorpos[1])
-                    cantmove = True
-                    break
+    if anchorpos[1] < 10 - 1 - right_block_padding:
+        for i in reversed(range(height)):
+            if current_block[i][width - 1] == 1:
+                print("its edge , current spot:", i)
+                if gamespace[anchorpos[0] + i, anchorpos[1] + right_block_padding + 1] == 1:
+                        print(i, "fart", current_block[height-1][i], "something is below", anchorpos[0], anchorpos[1])
+                        cantmove = True
+                        break
 
-        else:
-            for o in range(width):
-                if current_block[i][o] == 1:
-                    print("not at bottom, looking at spot:", i, "   its deep in at:", o)
-                    if gamespace[anchorpos[0] + i, anchorpos[1] + right_block_padding - o + 1] == 1:
-                            cantmove = True
-                            break
+            else:
+                for o in range(width):
+                    if current_block[i][o] == 1:
+                        print("not at bottom, looking at spot:", i, "   its deep in at:", o)
+                        if gamespace[anchorpos[0] + i, anchorpos[1] + right_block_padding - o + 1] == 1:
+                                cantmove = True
+                                break
+
+    else:
+        cantmove = True
     
     return cantmove
 
+def hard_drop(gamespace, anchorpos, current_block):
+    while True:
+        if can_move_down(gamespace, anchorpos, current_block) == False:
+            anchorpos[0] = anchorpos[0] + 1
+        else:
+            break
 
-                
+    
+    return anchorpos
 
 
-
-
-
-
-def move_block_down(gamespace, anchorpos, tall, centre):
-    if can_move_down(gamespace, anchorpos) == False:
+def move_block_down(gamespace, anchorpos, current_block):
+    if can_move_down(gamespace, anchorpos, current_block) == False:
         anchorpos[0] = anchorpos[0] + 1
     return anchorpos
 
-def player_move_block(gamespace, anchorpos, tall, currentinput, last_time, wide):
+def player_move_block(gamespace, anchorpos, currentinput, last_time, current_block):
     if currentinput == 'a':
-        if can_move_left(gamespace, anchorpos) == False:
+        if can_move_left(gamespace, anchorpos, current_block) == False:
             anchorpos[1] = anchorpos[1] - 1
             clear()
-            print_temp_screen(gamespace, anchorpos)
+            print_temp_screen(gamespace, anchorpos, current_block)
 
     if currentinput == 'd':
-        if can_move_right(gamespace, anchorpos) == False:
+        if can_move_right(gamespace, anchorpos, current_block) == False:
             anchorpos[1] = anchorpos[1] + 1
             clear()
-            print_temp_screen(gamespace, anchorpos)
+            print_temp_screen(gamespace, anchorpos, current_block)
     
     if currentinput == 's':
-        if can_move_down(gamespace, anchorpos) == False:
+        if can_move_down(gamespace, anchorpos, current_block) == False:
             anchorpos[0] = anchorpos[0] + 1
             last_time = time.time()
             clear()
-            print_temp_screen(gamespace, anchorpos)
-            
-        
-    return anchorpos, last_time
+            print_temp_screen(gamespace, anchorpos, current_block)
+    
+    if currentinput == 'w':
+        current_block = np.rot90(current_block)
+        clear()
+        print_temp_screen(gamespace, anchorpos, current_block)
 
-def print_temp_screen(gamespace, anchorpos):
+    if currentinput == ' ':
+        anchorpos = hard_drop(gamespace, anchorpos, current_block)
+        clear()
+        print_temp_screen(gamespace, anchorpos, current_block)      
+        
+    return anchorpos, last_time, current_block
+
+#anchorpos 0 = height, anchorpos 1 = width
+def print_temp_screen(gamespace, anchorpos, current_block):
     screenspace = gamespace.copy()
 
-    #screenspace[anchorpos[0], anchorpos[1]] = 1
-    L_tetro = np.array([
-    [1, 1, 1], 
-    [1, 1, 1],
-    [0, 1, 0]])
+    height, width = current_block.shape
 
-    half = 2
+    start_row = anchorpos[0]
+    start_col = anchorpos[1]
 
-    region = screenspace[anchorpos[0]:anchorpos[0] + 3, anchorpos[1] - half + 1:anchorpos[1] + half]
-    mask = L_tetro != 0
-    region[mask] = L_tetro[mask]
+    region = screenspace[
+        start_row:start_row + height,
+        start_col:start_col + width
+    ]
 
-    screenspace[anchorpos[0], anchorpos[1]] = 2
+    mask = current_block != 0
+    region[mask] = current_block[mask]
 
+    #screenspace[anchorpos[0], anchorpos[1]] = 2
 
     print(screenspace)
     
@@ -226,26 +227,12 @@ J_tetro = np.array([
     [1, 0, 0], 
     [1, 1, 1]])
 
-L_tetro = np.array([
+Long_tetro = np.array([
     [1, 1, 1, 1]])
 
-
-gamespace[19,9] = 1
-gamespace[19,8] = 1
-gamespace[19,7] = 1
-gamespace[19,6] = 1
-gamespace[18,6] = 1
-gamespace[17,6] = 1
-# gamespace[19,5] = 1
-# gamespace[19,4] = 1
-# gamespace[19,3] = 1
-# gamespace[19,2] = 1
-# gamespace[19,1] = 1
-# gamespace[19,0] = 1
+current_block = L_tetro.copy()
 
 print(gamespace)
-
-
 
 anchorpos = spawn_block(centre, anchorpos)
 
@@ -256,13 +243,13 @@ while True:
     check_time = now - last_time
 
     if check_time >= interval:
-        anchorpos = move_block_down(gamespace, anchorpos, tall, centre)
+        anchorpos = move_block_down(gamespace, anchorpos, current_block)
         last_time = time.time()
         clear()
-        print_temp_screen(gamespace, anchorpos)
+        print_temp_screen(gamespace, anchorpos, current_block)
     
     else:
         currentinput  = getch()
-        anchorpos, last_time = player_move_block(gamespace, anchorpos, tall, currentinput, last_time, wide)
+        anchorpos, last_time, current_block = player_move_block(gamespace, anchorpos, currentinput, last_time, current_block)
 
     
